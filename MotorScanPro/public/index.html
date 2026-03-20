@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — MotorScan Pro</title>
+  <meta name="description" content="Panel de control de diagnóstico automotriz MotorScan Pro">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <button class="mobile-toggle" aria-label="Menú">☰</button>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-icon">⚡</div>
+        <div><h1>MotorScan</h1><small>Diagnóstico Pro</small></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="index.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="vehicles.html" class="nav-item"><span class="nav-icon">🚗</span> Vehículos</a>
+        <div class="nav-section-label">Diagnóstico</div>
+        <a href="scans.html" class="nav-item"><span class="nav-icon">🔍</span> Escaneos</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reportes</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">CM</div>
+          <div class="user-details">
+            <div class="name">Cargando...</div>
+            <div class="role">—</div>
+          </div>
+          <button onclick="logout()" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;">Salir</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p>Resumen general del sistema de diagnóstico</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card amber"><div class="stat-label">Total Escaneos</div><div class="stat-value" id="statScans">—</div></div>
+        <div class="stat-card green"><div class="stat-label">Vehículos</div><div class="stat-value" id="statVehicles">—</div></div>
+        <div class="stat-card red"><div class="stat-label">Códigos DTC</div><div class="stat-value" id="statCodes">—</div></div>
+        <div class="stat-card blue"><div class="stat-label">Estado Crítico</div><div class="stat-value" id="statCritical">—</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid" style="margin-bottom:var(--sp-6)">
+        <div class="chart-card">
+          <h3>Estado de Motores</h3>
+          <canvas id="chartStatus"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Códigos por Sistema</h3>
+          <canvas id="chartSystem"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Severidad de Códigos</h3>
+          <canvas id="chartSeverity"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Top 5 Códigos Frecuentes</h3>
+          <canvas id="chartTopCodes"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Scans -->
+      <div class="card" style="margin-bottom:var(--sp-6)">
+        <div class="section-header">
+          <h3>🕐 Escaneos Recientes</h3>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Vehículo</th><th>Técnico</th><th>Códigos</th><th>Estado Motor</th><th>Estado Scan</th></tr></thead>
+          <tbody id="recentScans"></tbody>
+        </table>
+      </div>
+
+      <!-- Critical Alerts -->
+      <div class="card">
+        <div class="section-header">
+          <h3>🚨 Alertas Críticas</h3>
+        </div>
+        <div id="criticalAlerts"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    (async () => {
+      initSidebar();
+      const d = await apiFetch('/dashboard');
+
+      // Stats
+      document.getElementById('statScans').textContent = d.stats.totalScans;
+      document.getElementById('statVehicles').textContent = d.stats.totalVehicles;
+      document.getElementById('statCodes').textContent = d.stats.totalCodes;
+      const crit = d.statusCounts.find(s => s.estadoGeneral === 'Critico');
+      document.getElementById('statCritical').textContent = crit ? crit.dataValues?.count || crit.count : 0;
+
+      // Chart colors
+      const amber = '#f59e0b', green = '#10b981', red = '#ef4444', blue = '#3b82f6', purple = '#8b5cf6';
+      const chartOpts = { responsive: true, plugins: { legend: { labels: { color: '#9aa3b4', font: { size: 11 } } } } };
+
+      // Status chart
+      new Chart(document.getElementById('chartStatus'), {
+        type: 'doughnut',
+        data: {
+          labels: d.statusCounts.map(s => s.estadoGeneral),
+          datasets: [{ data: d.statusCounts.map(s => s.dataValues?.count || s.count),
+            backgroundColor: d.statusCounts.map(s => ({ Bueno: green, Regular: amber, Critico: red })[s.estadoGeneral] || blue),
+            borderWidth: 0 }]
+        },
+        options: { ...chartOpts, cutout: '65%' }
+      });
+
+      // System distribution
+      new Chart(document.getElementById('chartSystem'), {
+        type: 'bar',
+        data: {
+          labels: d.systemDist.map(s => s.sistema),
+          datasets: [{ label: 'Códigos', data: d.systemDist.map(s => s.dataValues?.count || s.count),
+            backgroundColor: [amber, green, blue, purple], borderRadius: 4 }]
+        },
+        options: { ...chartOpts, scales: { x: { ticks: { color: '#636d80' }, grid: { display: false } }, y: { ticks: { color: '#636d80' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+
+      // Severity
+      new Chart(document.getElementById('chartSeverity'), {
+        type: 'doughnut',
+        data: {
+          labels: d.severityDist.map(s => s.severidad),
+          datasets: [{ data: d.severityDist.map(s => s.dataValues?.count || s.count),
+            backgroundColor: d.severityDist.map(s => ({ Critico: red, Advertencia: amber, Informativo: blue })[s.severidad] || '#666'),
+            borderWidth: 0 }]
+        },
+        options: { ...chartOpts, cutout: '65%' }
+      });
+
+      // Top codes
+      new Chart(document.getElementById('chartTopCodes'), {
+        type: 'bar',
+        data: {
+          labels: d.topCodes.map(c => c.codigo),
+          datasets: [{ label: 'Frecuencia', data: d.topCodes.map(c => c.dataValues?.count || c.count),
+            backgroundColor: d.topCodes.map(c => ({ Critico: red, Advertencia: amber, Informativo: blue })[c.severidad] || amber),
+            borderRadius: 4 }]
+        },
+        options: { ...chartOpts, indexAxis: 'y', scales: { x: { ticks: { color: '#636d80' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#e8ecf2', font: { family: "'JetBrains Mono', monospace", size: 12 } }, grid: { display: false } } } }
+      });
+
+      // Recent scans table
+      const tbody = document.getElementById('recentScans');
+      d.recentScans.forEach(s => {
+        const v = s.vehicle;
+        tbody.innerHTML += `<tr onclick="location.href='scan.html?id=${s.id}'">
+          <td class="mono">${formatDate(s.fecha)}</td>
+          <td>${v.marca} ${v.modelo} ${v.anio}</td>
+          <td>${s.technician?.nombre || '—'}</td>
+          <td class="mono">${s.codes?.length || 0}</td>
+          <td><span class="badge ${badgeClass(s.estadoGeneral)}">${s.estadoGeneral}</span></td>
+          <td><span class="badge ${badgeClass(s.estado)}">${s.estado}</span></td>
+        </tr>`;
+      });
+
+      // Critical alerts
+      const alerts = document.getElementById('criticalAlerts');
+      if (d.criticalVehicles.length === 0) {
+        alerts.innerHTML = '<div class="empty-state"><p>✅ No hay alertas críticas</p></div>';
+      } else {
+        d.criticalVehicles.forEach(s => {
+          const v = s.vehicle;
+          const critCodes = s.codes.filter(c => c.severidad === 'Critico');
+          alerts.innerHTML += `<div class="dtc-card" onclick="location.href='scan.html?id=${s.id}'" style="cursor:pointer">
+            <div style="flex:0 0 auto"><span class="badge badge-critical">CRÍTICO</span></div>
+            <div style="flex:1"><strong>${v.marca} ${v.modelo} ${v.anio}</strong> — ${v.placa}<br>
+            <small style="color:var(--text-tertiary)">${critCodes.map(c => c.codigo).join(', ')}</small></div>
+            <div class="mono" style="color:var(--text-tertiary)">${formatDate(s.fecha)}</div>
+          </div>`;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

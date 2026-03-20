@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Diagnóstico — MotorScan Pro</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <button class="mobile-toggle" aria-label="Menú">☰</button>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><div class="logo-icon">⚡</div><div><h1>MotorScan</h1><small>Diagnóstico Pro</small></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="index.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="vehicles.html" class="nav-item"><span class="nav-icon">🚗</span> Vehículos</a>
+        <div class="nav-section-label">Diagnóstico</div>
+        <a href="scans.html" class="nav-item"><span class="nav-icon">🔍</span> Escaneos</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reportes</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info"><div class="user-avatar">CM</div><div class="user-details"><div class="name">Cargando...</div><div class="role">—</div></div>
+          <button onclick="logout()" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;">Salir</button></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+        <a href="scans.html" style="font-size:12px;color:var(--text-tertiary);">← Volver</a>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Reporte</button>
+      </div>
+
+      <div class="report-container fade-in" id="reportContent">
+        <div class="report-header">
+          <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+          <h2 style="font-size:20px;font-weight:700;">MotorScan Pro</h2>
+          <p style="color:var(--text-tertiary);font-size:13px;">Reporte de Diagnóstico Automotriz</p>
+          <p id="reportDate" class="mono" style="color:var(--text-tertiary);font-size:12px;margin-top:8px;"></p>
+        </div>
+
+        <div class="report-section">
+          <h3>Datos del Vehículo</h3>
+          <table class="data-table" id="vehicleTable"></table>
+        </div>
+
+        <div class="report-section">
+          <h3>Resultado del Escaneo</h3>
+          <div style="display:flex;gap:12px;margin-bottom:16px;" id="scanStatus"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Códigos de Error Detectados</h3>
+          <div id="reportCodes"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Parámetros del Motor</h3>
+          <div class="params-grid" id="reportParams"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>Recomendaciones del Técnico</h3>
+          <div id="reportRecs" style="background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:16px;"></div>
+        </div>
+
+        <div class="report-section" style="border-top:1px solid var(--border-default);padding-top:20px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);">
+            <span>Técnico: <span id="techName" style="color:var(--text-secondary)"></span></span>
+            <span>Taller: <span id="shopName" style="color:var(--text-secondary)"></span></span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    (async () => {
+      initSidebar();
+      const scanId = new URLSearchParams(location.search).get('scanId');
+      if (!scanId) { location.href = '/scans.html'; return; }
+
+      const s = await apiFetch(`/scans/${scanId}`);
+      const v = s.vehicle;
+      const r = s.report;
+
+      document.getElementById('reportDate').textContent = `Generado: ${formatDate(r?.fechaGeneracion || s.fecha)}`;
+
+      // Vehicle table
+      document.getElementById('vehicleTable').innerHTML = `
+        <tr><td style="color:var(--text-tertiary);width:140px;">Marca / Modelo</td><td>${v.marca} ${v.modelo} ${v.anio}</td></tr>
+        <tr><td style="color:var(--text-tertiary)">VIN</td><td class="mono">${v.vin}</td></tr>
+        <tr><td style="color:var(--text-tertiary)">Placa</td><td>${v.placa}</td></tr>
+        <tr><td style="color:var(--text-tertiary)">Motor</td><td>${v.tipoMotor}</td></tr>
+        <tr><td style="color:var(--text-tertiary)">Kilometraje</td><td>${(v.kilometraje||0).toLocaleString()} km</td></tr>
+        <tr><td style="color:var(--text-tertiary)">Propietario</td><td>${v.owner?.nombre || '—'}</td></tr>`;
+
+      // Status
+      document.getElementById('scanStatus').innerHTML = `
+        <span class="badge ${badgeClass(s.estadoGeneral)}">Motor: ${s.estadoGeneral}</span>
+        <span class="badge ${badgeClass(s.estado)}">${s.estado}</span>`;
+
+      // Codes
+      const codes = document.getElementById('reportCodes');
+      if (!s.codes || s.codes.length === 0) {
+        codes.innerHTML = '<p style="color:var(--status-ok);">✅ Sin códigos de error activos</p>';
+      } else {
+        s.codes.forEach(c => {
+          codes.innerHTML += `<div class="dtc-card" style="margin-bottom:8px">
+            <div class="dtc-code ${severityCodeClass(c.severidad)}">${c.codigo}</div>
+            <div class="dtc-desc">${c.descripcion}</div>
+            <span class="badge ${badgeClass(c.severidad)}">${c.severidad}</span>
+            <div class="dtc-system">${c.sistema}</div>
+          </div>`;
+        });
+      }
+
+      // Params (latest values)
+      const params = s.parameters || [];
+      const paramNames = [...new Set(params.map(p => p.nombre))];
+      const grid = document.getElementById('reportParams');
+      paramNames.forEach(name => {
+        const latest = params.filter(p => p.nombre === name).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+        grid.innerHTML += `<div class="param-card">
+          <div class="param-label">${name}</div>
+          <div class="param-value">${latest.valor.toFixed(1)}</div>
+          <div class="param-unit">${latest.unidad}</div>
+        </div>`;
+      });
+
+      // Recommendations
+      const recs = document.getElementById('reportRecs');
+      if (r && r.recomendaciones) {
+        recs.innerHTML = r.recomendaciones.split('\n').map(l => `<p style="margin-bottom:6px;font-size:13px;color:var(--text-secondary)">${l}</p>`).join('');
+      } else {
+        recs.innerHTML = '<p style="color:var(--text-tertiary);font-size:13px;">Sin recomendaciones registradas</p>';
+      }
+
+      // Footer
+      document.getElementById('techName').textContent = s.technician?.nombre || '—';
+      document.getElementById('shopName').textContent = v.owner?.nombreTaller || '—';
+    })();
+  </script>
+</body>
+</html>

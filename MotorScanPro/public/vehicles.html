@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehículos — MotorScan Pro</title>
+  <meta name="description" content="Gestión de vehículos registrados en MotorScan Pro">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <button class="mobile-toggle" aria-label="Menú">☰</button>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><div class="logo-icon">⚡</div><div><h1>MotorScan</h1><small>Diagnóstico Pro</small></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="index.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="vehicles.html" class="nav-item"><span class="nav-icon">🚗</span> Vehículos</a>
+        <div class="nav-section-label">Diagnóstico</div>
+        <a href="scans.html" class="nav-item"><span class="nav-icon">🔍</span> Escaneos</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reportes</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info"><div class="user-avatar">CM</div><div class="user-details"><div class="name">Cargando...</div><div class="role">—</div></div>
+          <button onclick="logout()" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;">Salir</button></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div><h2>Vehículos</h2><p>Gestión de vehículos registrados</p></div>
+        <button class="btn btn-primary" onclick="showModal()">+ Nuevo Vehículo</button>
+      </div>
+
+      <div class="grid-3" id="vehicleGrid" style="margin-bottom:var(--sp-6)"></div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle">Nuevo Vehículo</h3>
+      <form id="vehicleForm">
+        <div class="grid-2">
+          <div class="form-group"><label>Marca</label><input type="text" id="fMarca" class="form-control" placeholder="Toyota" required></div>
+          <div class="form-group"><label>Modelo</label><input type="text" id="fModelo" class="form-control" placeholder="Corolla" required></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>Año</label><input type="number" id="fAnio" class="form-control" placeholder="2024" required></div>
+          <div class="form-group"><label>Placa</label><input type="text" id="fPlaca" class="form-control" placeholder="ABC-1234" required></div>
+        </div>
+        <div class="form-group"><label>VIN (17 caracteres)</label><input type="text" id="fVin" class="form-control" placeholder="1HGBH41JXMN109186" maxlength="17" required></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Tipo de Motor</label><input type="text" id="fMotor" class="form-control" placeholder="2.0L 4-Cilindros" required></div>
+          <div class="form-group"><label>Kilometraje</label><input type="number" id="fKm" class="form-control" placeholder="50000" required></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    let editId = null;
+
+    async function loadVehicles() {
+      initSidebar();
+      const vehicles = await apiFetch('/vehicles');
+      const grid = document.getElementById('vehicleGrid');
+      if (vehicles.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🚗</div><p>No hay vehículos registrados</p></div>';
+        return;
+      }
+      grid.innerHTML = vehicles.map(v => {
+        const lastScan = v.scans && v.scans.length > 0 ? v.scans[0] : null;
+        const statusBadge = lastScan ? `<span class="badge ${badgeClass(lastScan.estadoGeneral)}">${lastScan.estadoGeneral}</span>` : '<span class="badge badge-info">Sin escaneo</span>';
+        return `<div class="vehicle-card fade-in" onclick="location.href='vehicle-detail.html?id=${v.id}'">
+          <div class="vehicle-header">
+            <div class="vehicle-title">${v.marca} ${v.modelo}</div>
+            <div class="vehicle-year">${v.anio}</div>
+          </div>
+          ${statusBadge}
+          <div class="vehicle-meta">
+            <div class="vehicle-meta-item">🔧 <span>${v.tipoMotor}</span></div>
+            <div class="vehicle-meta-item">📍 <span>${v.placa}</span></div>
+            <div class="vehicle-meta-item">⏱ <span>${(v.kilometraje || 0).toLocaleString()} km</span></div>
+          </div>
+          <div class="vehicle-meta" style="margin-top:8px;">
+            <div class="vehicle-meta-item">📝 <span>${v.scans?.length || 0} escaneos</span></div>
+            ${v.owner ? `<div class="vehicle-meta-item">👤 <span>${v.owner.nombre}</span></div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function showModal() {
+      editId = null;
+      document.getElementById('modalTitle').textContent = 'Nuevo Vehículo';
+      document.getElementById('vehicleForm').reset();
+      document.getElementById('modal').classList.add('active');
+    }
+    function hideModal() { document.getElementById('modal').classList.remove('active'); }
+
+    document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        marca: document.getElementById('fMarca').value,
+        modelo: document.getElementById('fModelo').value,
+        anio: parseInt(document.getElementById('fAnio').value),
+        placa: document.getElementById('fPlaca').value,
+        vin: document.getElementById('fVin').value,
+        tipoMotor: document.getElementById('fMotor').value,
+        kilometraje: parseInt(document.getElementById('fKm').value)
+      };
+      try {
+        if (editId) {
+          await apiFetch(`/vehicles/${editId}`, { method: 'PUT', body: JSON.stringify(data) });
+          showToast('Vehículo actualizado');
+        } else {
+          await apiFetch('/vehicles', { method: 'POST', body: JSON.stringify(data) });
+          showToast('Vehículo registrado');
+        }
+        hideModal();
+        loadVehicles();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    loadVehicles();
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — MotorScan Pro</title>
+  <meta name="description" content="Accede a MotorScan Pro para diagnosticar y escanear motores de vehículos">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card fade-in">
+      <div class="logo-icon">⚡</div>
+      <h2>MotorScan Pro</h2>
+      <p class="sub">Diagnóstico Automotriz Inteligente</p>
+
+      <div class="login-error" id="loginError"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-control" placeholder="admin@motorscan.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-tertiary);">
+        Demo: <code style="color:var(--brand-primary)">admin@motorscan.com</code> / <code style="color:var(--brand-primary)">admin123</code>
+      </p>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (getToken()) window.location.href = '/index.html';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('loginError');
+      errEl.style.display = 'none';
+
+      try {
+        const data = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          })
+        });
+        setAuth(data.token, data.user);
+        window.location.href = '/index.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

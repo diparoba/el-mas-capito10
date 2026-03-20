@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escaneos — MotorScan Pro</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <button class="mobile-toggle" aria-label="Menú">☰</button>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><div class="logo-icon">⚡</div><div><h1>MotorScan</h1><small>Diagnóstico Pro</small></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="index.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="vehicles.html" class="nav-item"><span class="nav-icon">🚗</span> Vehículos</a>
+        <div class="nav-section-label">Diagnóstico</div>
+        <a href="scans.html" class="nav-item"><span class="nav-icon">🔍</span> Escaneos</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reportes</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info"><div class="user-avatar">CM</div><div class="user-details"><div class="name">Cargando...</div><div class="role">—</div></div>
+          <button onclick="logout()" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;">Salir</button></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header"><h2>Escaneos</h2><p>Historial completo de diagnósticos</p></div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Fecha</th><th>Vehículo</th><th>Técnico</th><th>Códigos</th><th>Estado Motor</th><th>Estado</th></tr></thead>
+          <tbody id="scansTable"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <script src="/js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    (async () => {
+      initSidebar();
+      const scans = await apiFetch('/scans');
+      const tbody = document.getElementById('scansTable');
+      if (scans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">No hay escaneos registrados</td></tr>';
+        return;
+      }
+      scans.forEach(s => {
+        const v = s.vehicle;
+        tbody.innerHTML += `<tr onclick="location.href='scan.html?id=${s.id}'">
+          <td class="mono">#${s.id}</td>
+          <td class="mono">${formatDate(s.fecha)}</td>
+          <td>${v ? `${v.marca} ${v.modelo} ${v.anio}` : '—'}</td>
+          <td>${s.technician?.nombre || '—'}</td>
+          <td class="mono">${s.codes?.length || 0}</td>
+          <td><span class="badge ${badgeClass(s.estadoGeneral)}">${s.estadoGeneral}</span></td>
+          <td><span class="badge ${badgeClass(s.estado)}">${s.estado}</span></td>
+        </tr>`;
+      });
+    })();
+  </script>
+</body>
+</html>

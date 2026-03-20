@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle de Escaneo — MotorScan Pro</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <button class="mobile-toggle" aria-label="Menú">☰</button>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><div class="logo-icon">⚡</div><div><h1>MotorScan</h1><small>Diagnóstico Pro</small></div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="index.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="vehicles.html" class="nav-item"><span class="nav-icon">🚗</span> Vehículos</a>
+        <div class="nav-section-label">Diagnóstico</div>
+        <a href="scans.html" class="nav-item"><span class="nav-icon">🔍</span> Escaneos</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📋</span> Reportes</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info"><div class="user-avatar">CM</div><div class="user-details"><div class="name">Cargando...</div><div class="role">—</div></div>
+          <button onclick="logout()" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;">Salir</button></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="margin-bottom:8px"><a href="scans.html" style="font-size:12px;color:var(--text-tertiary);">← Volver a Escaneos</a></div>
+          <h2 id="scanTitle">Cargando...</h2>
+          <p id="scanSub"></p>
+        </div>
+        <div id="scanBadges" style="display:flex;gap:8px;"></div>
+      </div>
+
+      <!-- Vehicle Info -->
+      <div class="card fade-in" style="margin-bottom:var(--sp-5)">
+        <div class="section-header"><h3>🚗 Información del Vehículo</h3></div>
+        <div class="grid-3" id="vehicleInfo" style="font-size:13px;"></div>
+      </div>
+
+      <!-- DTC Codes -->
+      <div class="card fade-in" style="margin-bottom:var(--sp-5)">
+        <div class="section-header"><h3>⚠️ Códigos de Diagnóstico (DTC)</h3><span id="codeCount" class="badge badge-info"></span></div>
+        <div class="dtc-list" id="dtcList"></div>
+      </div>
+
+      <!-- Engine Parameters - Current Values -->
+      <div class="card fade-in" style="margin-bottom:var(--sp-5)">
+        <div class="section-header"><h3>📟 Parámetros del Motor (Últimos Valores)</h3></div>
+        <div class="params-grid" id="paramsGrid"></div>
+      </div>
+
+      <!-- Engine Parameters - Charts -->
+      <div class="charts-grid fade-in" style="margin-bottom:var(--sp-5)">
+        <div class="chart-card"><h3>RPM en Tiempo</h3><canvas id="chartRpm"></canvas></div>
+        <div class="chart-card"><h3>Temperatura Refrigerante</h3><canvas id="chartTemp"></canvas></div>
+        <div class="chart-card"><h3>Voltaje Batería</h3><canvas id="chartVolt"></canvas></div>
+        <div class="chart-card"><h3>Carga del Motor</h3><canvas id="chartLoad"></canvas></div>
+      </div>
+
+      <!-- Technician Notes -->
+      <div class="card fade-in" style="margin-bottom:var(--sp-5)">
+        <div class="section-header"><h3>📝 Notas del Técnico</h3></div>
+        <p id="techNotes" style="color:var(--text-secondary);font-size:13px;white-space:pre-line;"></p>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:12px;">
+        <a id="reportLink" class="btn btn-primary">📋 Ver Reporte</a>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    (async () => {
+      initSidebar();
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) { location.href = '/scans.html'; return; }
+
+      const s = await apiFetch(`/scans/${id}`);
+      const v = s.vehicle;
+
+      // Header
+      document.getElementById('scanTitle').textContent = `Escaneo #${s.id} — ${v.marca} ${v.modelo} ${v.anio}`;
+      document.getElementById('scanSub').textContent = `${formatDate(s.fecha)} · Técnico: ${s.technician?.nombre || '—'}`;
+      document.getElementById('scanBadges').innerHTML = `
+        <span class="badge ${badgeClass(s.estadoGeneral)}">${s.estadoGeneral}</span>
+        <span class="badge ${badgeClass(s.estado)}">${s.estado}</span>`;
+
+      // Vehicle info
+      document.getElementById('vehicleInfo').innerHTML = `
+        <div class="vehicle-meta-item">🏷️ Marca/Modelo: <span>${v.marca} ${v.modelo} ${v.anio}</span></div>
+        <div class="vehicle-meta-item">🔑 VIN: <span style="font-family:var(--font-data)">${v.vin}</span></div>
+        <div class="vehicle-meta-item">📍 Placa: <span>${v.placa}</span></div>
+        <div class="vehicle-meta-item">🔧 Motor: <span>${v.tipoMotor}</span></div>
+        <div class="vehicle-meta-item">⏱ Km: <span>${(v.kilometraje||0).toLocaleString()}</span></div>
+        <div class="vehicle-meta-item">👤 Propietario: <span>${v.owner?.nombre || '—'}</span></div>`;
+
+      // DTC Codes
+      document.getElementById('codeCount').textContent = `${s.codes?.length || 0} códigos`;
+      const dtcList = document.getElementById('dtcList');
+      if (!s.codes || s.codes.length === 0) {
+        dtcList.innerHTML = '<div class="empty-state"><p>✅ Sin códigos de error activos</p></div>';
+      } else {
+        s.codes.forEach(c => {
+          dtcList.innerHTML += `<div class="dtc-card">
+            <div class="dtc-code ${severityCodeClass(c.severidad)}">${c.codigo}</div>
+            <div class="dtc-desc">${c.descripcion}</div>
+            <span class="badge ${badgeClass(c.severidad)}">${c.severidad}</span>
+            <div class="dtc-system">${c.sistema}</div>
+          </div>`;
+        });
+      }
+
+      // Engine Parameters - Latest values
+      const params = s.parameters || [];
+      const paramNames = [...new Set(params.map(p => p.nombre))];
+      const paramsGrid = document.getElementById('paramsGrid');
+      paramNames.forEach(name => {
+        const latest = params.filter(p => p.nombre === name).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+        paramsGrid.innerHTML += `<div class="param-card">
+          <div class="param-label">${name}</div>
+          <div class="param-value">${latest.valor.toFixed(1)}</div>
+          <div class="param-unit">${latest.unidad}</div>
+        </div>`;
+      });
+
+      // Charts
+      const amber = '#f59e0b', green = '#10b981', red = '#ef4444', blue = '#3b82f6';
+      const chartOpts = {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#636d80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+          y: { ticks: { color: '#636d80' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      };
+
+      function makeChart(canvasId, paramName, color) {
+        const data = params.filter(p => p.nombre === paramName).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        if (data.length === 0) return;
+        new Chart(document.getElementById(canvasId), {
+          type: 'line',
+          data: {
+            labels: data.map((_, i) => `T${i+1}`),
+            datasets: [{ data: data.map(d => d.valor), borderColor: color, backgroundColor: color + '20',
+              fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: color, borderWidth: 2 }]
+          },
+          options: chartOpts
+        });
+      }
+
+      makeChart('chartRpm', 'RPM', amber);
+      makeChart('chartTemp', 'Temperatura Refrigerante', red);
+      makeChart('chartVolt', 'Voltaje Batería', green);
+      makeChart('chartLoad', 'Carga Motor', blue);
+
+      // Notes
+      document.getElementById('techNotes').textContent = s.notasTecnico || 'Sin notas';
+
+      // Report link
+      document.getElementById('reportLink').href = `report.html?scanId=${s.id}`;
+    })();
+  </script>
+</body>
+</html>
