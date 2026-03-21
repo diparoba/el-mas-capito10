@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es" class="dark-theme">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MotorScan Pro</title>
+    <!-- Modern Typography: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Sidebar -->
+      <aside class="sidebar glass-effect">
+        <div class="logo">
+          <h1>MotorScan<span class="pro">PRO</span></h1>
+        </div>
+        <nav>
+          <ul>
+            <li class="active"><a href="#">📊 Dashboard</a></li>
+            <li><a href="#">🚗 Vehículos</a></li>
+            <li><a href="#">🩺 Escaneos DTC</a></li>
+            <li><a href="#">📈 Telemetría</a></li>
+            <li><a href="#">⚙️ Configuración</a></li>
+          </ul>
+        </nav>
+        <div class="user-profile">
+          <div class="avatar">T</div>
+          <div class="info">
+            <span class="name">Técnico Admin</span>
+            <span class="role">Administrador</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <header>
+          <h2>Resumen del Taller</h2>
+          <div class="action-buttons">
+            <button class="btn btn-primary">+ Nuevo Escaneo</button>
+          </div>
+        </header>
+
+        <!-- Metrics Cards -->
+        <section class="metrics-grid" id="metrics-grid">
+          <!-- Loaded via JS -->
+          <div class="metric-card loading glass-effect">Cargando...</div>
+        </section>
+
+        <!-- Charts & Data section -->
+        <section class="dashboard-body">
+          <div class="chart-container glass-effect">
+            <h3>Frecuencia de Errores por Sistema</h3>
+            <canvas id="severityChart"></canvas>
+          </div>
+
+          <div class="table-container glass-effect">
+            <h3>Escaneos Recientes</h3>
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Vehículo</th>
+                  <th>Fecha</th>
+                  <th>Severidad</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="scans-table-body">
+                <!-- Loaded via JS -->
+                <tr><td colspan="4" class="loading-td">Cargando datos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
