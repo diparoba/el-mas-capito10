@@ -15,13 +15,13 @@ export function renderSeverityChart(canvasId, inputData) {
             datasets: [{
                 data: inputData.data,
                 backgroundColor: [
-                    '#ff4d4d',   // Crítico
-                    '#ffa500',   // Advertencia
-                    '#00e5ff',   // Info Chasis
-                    '#6c2bd9'    // Info Red
+                    '#ff2a5f',   // Crítico - Neon Pink/Red
+                    '#ffaa00',   // Advertencia - Neon Orange
+                    '#00f0ff',   // Info Chasis - Neon Cyan
+                    '#7000ff'    // Info Red - Neon Purple
                 ],
                 borderWidth: 0,
-                hoverOffset: 10
+                hoverOffset: 15
             }]
         },
         options: {

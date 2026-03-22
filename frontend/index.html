@@ -2,31 +2,85 @@
 <html lang="es" class="dark-theme">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MotorScan Pro</title>
+    <meta name="description" content="MotorScan Pro - Sistema de diagnóstico y telemetría automotriz avanzado para talleres profesionales." />
+    <title>MotorScan Pro — Telemetría Automotriz</title>
+    <!-- Favicon inline SVG motor icon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
     <!-- Modern Typography: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="app">
-      <!-- Sidebar -->
+
+    <!-- ===================== LOGIN OVERLAY ===================== -->
+    <div id="login-overlay" class="login-overlay">
+      <div class="login-card glass-effect">
+        <div class="login-logo">MotorScan<span>PRO</span></div>
+        <p class="login-subtitle">Sistema de Diagnóstico Automotriz Avanzado</p>
+        <p class="login-hint">Demo: cualquier usuario / contraseña</p>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="username">Usuario Técnico</label>
+            <input type="text" id="username" placeholder="tecnico@taller.com" value="admin" required />
+          </div>
+          <div class="input-group">
+            <label for="password">Pin de Seguridad</label>
+            <input type="password" id="password" placeholder="••••••••" value="admin123" required />
+          </div>
+          <button type="submit" class="btn-login">Acceder al Panel →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===================== MAIN APP ===================== -->
+    <div id="app" style="filter: blur(10px); transition: filter 0.5s ease;">
+
+      <!-- SIDEBAR -->
       <aside class="sidebar glass-effect">
         <div class="logo">
-          <h1>MotorScan<span class="pro">PRO</span></h1>
+          <h1>Motor<span class="pro">SCAN</span></h1>
         </div>
         <nav>
           <ul>
-            <li class="active"><a href="#">📊 Dashboard</a></li>
-            <li><a href="#">🚗 Vehículos</a></li>
-            <li><a href="#">🩺 Escaneos DTC</a></li>
-            <li><a href="#">📈 Telemetría</a></li>
-            <li><a href="#">⚙️ Configuración</a></li>
+            <li class="active"><a href="#" id="nav-dashboard">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+              Dashboard
+            </a></li>
+            <li><a href="#" id="nav-vehicles">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 6H7l-2 6h14l-2-6h-2V4a1 1 0 00-1-1h-1a1 1 0 00-1 1v2z"/></svg>
+              Vehículos
+            </a></li>
+            <li><a href="#" id="nav-scans">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Escaneos DTC
+            </a></li>
+            <li><a href="#" id="nav-telemetry">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Telemetría
+            </a></li>
+            <li><a href="#" id="nav-config">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Configuración
+            </a></li>
           </ul>
         </nav>
+
+        <!-- Active Vehicle Card -->
+        <div class="active-vehicle-card glass-effect" id="active-vehicle-card">
+          <div class="av-header">
+            <span class="av-dot"></span>
+            <span class="av-label">Vehículo Activo</span>
+          </div>
+          <div class="av-name" id="active-vehicle-name">Kia Rio 2019</div>
+          <div class="av-scanning">
+            <div class="scan-bar"></div>
+            <span>Escaneando...</span>
+          </div>
+        </div>
+
         <div class="user-profile">
-          <div class="avatar">T</div>
+          <div class="avatar">TA</div>
           <div class="info">
             <span class="name">Técnico Admin</span>
             <span class="role">Administrador</span>
@@ -34,50 +88,73 @@
         </div>
       </aside>
 
-      <!-- Main Content -->
+      <!-- MAIN CONTENT -->
       <main class="content">
         <header>
-          <h2>Resumen del Taller</h2>
+          <div>
+            <h2>Resumen del Taller</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Domingo, 22 de Marzo 2026 · Turno Activo</p>
+          </div>
           <div class="action-buttons">
-            <button class="btn btn-primary">+ Nuevo Escaneo</button>
+            <button class="btn btn-primary" id="new-scan-btn">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Nuevo Escaneo
+            </button>
           </div>
         </header>
 
-        <!-- Metrics Cards -->
+        <!-- KPI Metrics Grid -->
         <section class="metrics-grid" id="metrics-grid">
-          <!-- Loaded via JS -->
-          <div class="metric-card loading glass-effect">Cargando...</div>
+          <!-- Injected by JS -->
         </section>
 
-        <!-- Charts & Data section -->
+        <!-- Charts & Table -->
         <section class="dashboard-body">
           <div class="chart-container glass-effect">
-            <h3>Frecuencia de Errores por Sistema</h3>
-            <canvas id="severityChart"></canvas>
+            <h3>Distribución de Errores DTC</h3>
+            <div style="position:relative; flex:1; min-height:0;">
+              <canvas id="severityChart"></canvas>
+            </div>
           </div>
 
           <div class="table-container glass-effect">
-            <h3>Escaneos Recientes</h3>
+            <div class="table-header-row">
+              <h3 style="border:none; padding:0; margin:0;">Escaneos Recientes</h3>
+              <select id="severity-filter" class="filter-select">
+                <option value="all">Todos</option>
+                <option value="Crítico">🔴 Críticos</option>
+                <option value="Advertencia">🟡 Advertencias</option>
+                <option value="Sano">🟢 Sanos</option>
+              </select>
+            </div>
             <table class="modern-table">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Vehículo</th>
                   <th>Fecha</th>
-                  <th>Severidad</th>
+                  <th>Severidad DTC</th>
                   <th>Estado</th>
                 </tr>
               </thead>
               <tbody id="scans-table-body">
-                <!-- Loaded via JS -->
-                <tr><td colspan="4" class="loading-td">Cargando datos...</td></tr>
+                <!-- Injected by JS -->
               </tbody>
             </table>
           </div>
         </section>
       </main>
     </div>
-    
-    <!-- Scripts -->
+
+    <!-- FOOTER STATUS BAR -->
+    <footer class="status-bar">
+      <span id="api-status">
+        <span class="status-dot"></span> Conectando...
+      </span>
+      <span style="color:var(--text-muted); font-size:0.8rem;">MotorScan Pro v1.0 · Fase 1</span>
+      <span style="color:var(--text-muted); font-size:0.8rem;">Node.js + Vite + Chart.js</span>
+    </footer>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
