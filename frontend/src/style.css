@@ -789,3 +789,98 @@ header h2 {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* ============================================================
+   PROFESSOR & SCORE SYSTEM
+   ============================================================ */
+.professor-card {
+  margin: 10px 0 20px;
+  padding: 16px;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  background: linear-gradient(135deg, rgba(20, 25, 45, 0.6) 0%, rgba(10, 15, 30, 0.8) 100%);
+  position: relative;
+  overflow: hidden;
+  animation: float 4s ease-in-out infinite;
+}
+
+.prof-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.prof-content p {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-main);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.prof-badge-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 5px;
+}
+
+.prof-badge-img {
+  width: 100%;
+  max-width: 180px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  transition: transform 0.5s var(--anim-bounce);
+}
+
+.prof-badge-img:hover {
+  transform: scale(1.1) rotate(2deg);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.score-badge {
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.score-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.score-value {
+  font-family: 'Outfit';
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: gold;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  animation: pulse-score 2s infinite;
+}
+
+@keyframes pulse-score {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.3); }
+}
+
+.score-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1), transparent 70%);
+  pointer-events: none;
+}

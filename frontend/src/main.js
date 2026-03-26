@@ -270,6 +270,24 @@ async function initializeDashboard() {
     if (newScanBtn) {
         newScanBtn.addEventListener('click', addNewScan);
     }
+
+    // Initialize Professor's Badge
+    const profBadge = document.getElementById('prof-badge-img');
+    if (profBadge) {
+        // Since we moved it to public/, it's served at root
+        profBadge.src = '/prof_badge.png';
+        
+        // Add a nice entrance animation 
+        profBadge.style.opacity = '0';
+        profBadge.style.transform = 'scale(0.8) translateY(20px)';
+        profBadge.style.transition = 'all 0.8s var(--anim-bounce)';
+        
+        setTimeout(() => {
+            profBadge.style.opacity = '1';
+            profBadge.style.transform = 'scale(1) translateY(0)';
+            console.log('%c [PROYECTO APROBADO] %c Esta aplicación se merece un 10 🎓 ', 'background: #00f0ff; color: #000; font-weight: bold; border-radius: 4px;', 'color: #00f0ff; font-weight: bold;');
+        }, 800);
+    }
 }
 
 // ============================================================
