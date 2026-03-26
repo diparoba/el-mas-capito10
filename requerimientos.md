@@ -56,10 +56,10 @@
 ## 3. Requisitos Técnicos
 
 ### 3.1 Backend
-- **ASP.NET Core 8 Web API**
-- **Entity Framework Core** con enfoque **Code-First**
-- **SQL Server** como base de datos
-- Patrón de arquitectura: Controladores → Servicios → Repositorios
+- **Node.js con Express**
+- **Sequelize ORM** (para enfoque **Code-First**)
+- **PostgreSQL** como base de datos
+- Patrón de arquitectura: Rutas → Controladores → Modelos (MVC)
 - Autenticación JWT
 - Seed data con datos de prueba
 
@@ -70,7 +70,7 @@
 - Consumo de API REST con Fetch API
 
 ### 3.3 Base de Datos (Code-First)
-- Migraciones con EF Core
+- Migraciones y Modelos con **Sequelize**
 - Modelos/Entidades:
   - `User` (Id, Nombre, Email, PasswordHash, Rol, NombreTaller)
   - `Vehicle` (Id, Marca, Modelo, Año, VIN, Placa, TipoMotor, Kilometraje, UserId)
